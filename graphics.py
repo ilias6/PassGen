@@ -27,12 +27,12 @@ class UI:
         self.copied = False
         self.width = DIMENSIONS[0]
         self.height = DIMENSIONS[1]
-        self.ballcolor = (255, 255, 255)
-        self.sliced = [[], []]
+        self.ballcolor = [(255, 255, 255)]
+        self.sliced = [[]]
         self.vx = 0.1
         self.vy = 0.1
 
-    def changeBallColor(self,):
+    def changeBallColor(self, i):
         def changeColor(color):
             t = random.randint(-3, 3) 
             if (color+t > 255):
@@ -41,11 +41,11 @@ class UI:
                 return color - t
             return color+t
 
-        self.ballcolor = list(self.ballcolor)
-        self.ballcolor[0] = changeColor(self.ballcolor[0]) 
-        self.ballcolor[1] = changeColor(self.ballcolor[1]) 
-        self.ballcolor[2] = changeColor(self.ballcolor[2]) 
-        self.ballcolor = tuple(self.ballcolor)
+        self.ballcolor[i] = list(self.ballcolor[i])
+        self.ballcolor[i][0] = changeColor(self.ballcolor[i][0]) 
+        self.ballcolor[i][1] = changeColor(self.ballcolor[i][1]) 
+        self.ballcolor[i][2] = changeColor(self.ballcolor[i][2]) 
+        self.ballcolor[i] = tuple(self.ballcolor[i])
 
     def swapVelocity(self, i, j):
         m1 = self.ballsize[i]
@@ -70,11 +70,16 @@ class UI:
         if not int(d) or int(r1+r2)/int(d) > 3 :
             return
 
-        self.velocityx[i] = self.vx * int(r1+r2)/int(d) * -(signOfNumber(self.velocityx[j]))
-        self.velocityy[i] = self.vy * int(r1+r2)/int(d) * -(signOfNumber(self.velocityy[j]))
+        factor = random.random() + 0.5
+        self.velocityx[i] = factor * self.vx * int(r1+r2)/int(d) * -(signOfNumber(self.velocityx[j]))
+        factor = random.random() + 0.5
+        self.velocityx[i] = factor * self.vx * int(r1+r2)/int(d) * -(signOfNumber(self.velocityx[j]))
+        self.velocityy[i] = factor * self.vy * int(r1+r2)/int(d) * -(signOfNumber(self.velocityy[j]))
 
-        self.velocityx[j] = self.vx * int(r1+r2)/int(d) * (signOfNumber(self.velocityx[j]))
-        self.velocityy[j] = self.vy * int(r1+r2)/int(d) * (signOfNumber(self.velocityy[j]))
+        factor = random.random() + 0.5
+        self.velocityx[j] = factor * self.vx * int(r1+r2)/int(d) * (signOfNumber(self.velocityx[j]))
+        factor = random.random() + 0.5
+        self.velocityy[j] = factor * self.vy * int(r1+r2)/int(d) * (signOfNumber(self.velocityy[j]))
 
     def collision(self, i, x1, y1, r1, j, x2, y2, r2):
 
@@ -103,8 +108,8 @@ class UI:
     def bounceBall(self, ):
         for i, (x1, y1, r1) in enumerate(zip(self.ballx, self.bally, self.ballsize)):
             if random.randint(0, 100) > 70:
-                self.changeBallColor() 
-            pygame.draw.circle(self.screen, self.ballcolor, (x1, y1), r1)
+                self.changeBallColor(i) 
+            pygame.draw.circle(self.screen, self.ballcolor[i], (x1, y1), r1)
 
             # Check every ball with every other if they collide
             for j, (x2, y2, r2) in enumerate(zip(self.ballx[i+1:], self.bally[i+1:], self.ballsize[i+1:])):
@@ -122,9 +127,6 @@ class UI:
                 self.velocityx[i] = -abs(self.velocityx[i])
             if (self.bally[i] > self.height):
                 self.velocityy[i] = -abs(self.velocityy[i])
-            
-
-        return
     
     def slice(self, i, radius, x, y):
         self.ballsize[i] = 5*radius/7
@@ -133,17 +135,20 @@ class UI:
         self.ballx.append(x)
         self.bally.append(y)
         self.ballsize.append(5*radius/7)
-        self.velocityx.append(-self.velocityx[i])
-        self.velocityy.append(-self.velocityy[i])
+        factor = random.random()
+        self.velocityx.append(-factor*self.velocityx[i])
+        factor = random.random()
+        self.velocityy.append(-factor*self.velocityy[i])
+        self.ballcolor.append(self.ballcolor[i])
 
     def sliceRandomBall(self):
         randi = random.randint(0, len(self.ballx)-1)
         self.slice(randi, self.ballsize[randi], self.ballx[randi], self.bally[randi])
 
     def sliceBall(self, mouse):
-        for i, (x, y, radius) in enumerate(zip(self.ballx, self.bally, self.ballsize)):
-            if x+radius > mouse[0] > x and y+radius > mouse[1] > y and not len(self.sliced[i]):
-                self.slice(i, radius, x, y)
+        for i, (x, y, r) in enumerate(zip(self.ballx, self.bally, self.ballsize)):
+            if x+r > mouse[0] > x-r and y+r > mouse[1] > y-r and not len(self.sliced[i]):
+                self.slice(i, r, x, y)
                 return
 
     def displayUI(self, ):
@@ -154,11 +159,11 @@ class UI:
         running = True
 
         # Draw a solid blue circle in the center
-        self.ballx = [250, 500]
-        self.bally = [250, 500]
-        self.velocityx = [self.vx, self.vx] 
-        self.velocityy = [self.vy, self.vy] 
-        self.ballsize = [140, 140] 
+        self.ballx = [250]
+        self.bally = [250]
+        self.velocityx = [self.vx] 
+        self.velocityy = [self.vy] 
+        self.ballsize = [140] 
 
         while (now - start < 30 and running):
             # Did the user click the window close button?
